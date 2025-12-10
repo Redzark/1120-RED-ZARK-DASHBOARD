@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1120 Server KvK Timeline</title>
+    <title>1120 KVK TIMELINE</title>
     <style>
-        /* 글로벌 스타일 (RoK 테마) */
+        /* ============================
+           스타일 (Design System)
+           ============================ */
         :root {
             --bg-color: #0f1219;
             --card-bg: #1e2330;
             --text-primary: #f0f0f0;
             --text-secondary: #a0a5b9;
-            --accent: #ffb347; /* 골드 */
-            --ruins: #4fc3f7; /* 폐허 색상 */
-            --altar: #ba68c8; /* 제단 색상 */
-            --war: #e57373; /* 전쟁/관문 색상 */
+            --accent-gold: #ffb347;
+            --ruins-color: #4fc3f7; 
+            --altar-color: #ba68c8;
+            --war-color: #e57373;
+            --timer-bg: #2d3342;
         }
+
         body {
             font-family: 'Segoe UI', 'Noto Sans KR', sans-serif;
             background-color: var(--bg-color);
@@ -24,10 +28,22 @@
             padding: 20px;
             text-align: center;
         }
-        h1 { margin-bottom: 5px; color: var(--accent); }
-        .sub-title { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 30px; }
-        
-        .timeline-container {
+
+        h1 {
+            color: var(--accent-gold);
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .server-time {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-family: monospace;
+        }
+
+        .container {
             max-width: 700px;
             margin: 0 auto;
             display: flex;
@@ -35,193 +51,230 @@
             gap: 15px;
         }
 
-        .event-card {
+        /* 아코디언 스타일 */
+        details {
             background-color: var(--card-bg);
-            border-left: 5px solid #555;
             border-radius: 8px;
-            padding: 15px;
-            text-align: left;
-            position: relative;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            overflow: hidden;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
         }
 
-        /* 상태별 스타일 */
-        .event-card.active { border-left-color: #00e676; background-color: #252b3b; box-shadow: 0 0 15px rgba(0, 230, 118, 0.2); }
-        .event-card.past { opacity: 0.6; filter: grayscale(0.5); }
-        .event-card.type-ruins { border-left-color: var(--ruins); }
-        .event-card.type-altar { border-left-color: var(--altar); }
-        .event-card.type-war { border-left-color: var(--war); }
+        details[open] {
+            border-color: #555;
+            padding-bottom: 15px;
+        }
 
-        .header-row {
+        summary {
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            list-style: none; /* 화살표 제거 (커스텀 위함) */
         }
-        .event-name { font-size: 1.1em; font-weight: bold; }
-        .event-name span { display: block; font-size: 0.8em; color: var(--text-secondary); font-weight: normal; }
         
-        .d-day-badge {
-            background: #333;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-            white-space: nowrap;
-        }
-        .active .d-day-badge { background: #00e676; color: #000; }
+        summary::-webkit-details-marker { display: none; }
 
-        .time-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 0.9em;
+        summary:hover { background-color: rgba(255, 255, 255, 0.1); }
+
+        summary::after {
+            content: '▼';
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            transition: transform 0.3s;
+        }
+
+        details[open] summary::after { transform: rotate(180deg); }
+
+        /* 섹션별 색상 띠 */
+        .section-war summary { border-left: 5px solid var(--war-color); }
+        .section-ruins summary { border-left: 5px solid var(--ruins-color); }
+        .section-altar summary { border-left: 5px solid var(--altar-color); }
+
+        /* 내부 콘텐츠 */
+        .content-box {
+            padding: 0 15px;
+            text-align: left;
+        }
+
+        /* 넥스트 카운트다운 박스 */
+        .next-event-box {
+            background-color: var(--timer-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            border: 1px solid #444;
+        }
+        .next-label { font-size: 0.9em; color: var(--accent-gold); margin-bottom: 5px; }
+        .next-timer { font-size: 1.5em; font-weight: bold; font-family: monospace; }
+        .next-title { font-size: 1.1em; margin-bottom: 5px; color: white; }
+
+        /* 리스트 아이템 스타일 */
+        .list-item {
             background: rgba(0,0,0,0.2);
             padding: 10px;
+            margin-bottom: 8px;
             border-radius: 5px;
+            font-size: 0.9em;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
-        .time-box { display: flex; flex-direction: column; }
-        .time-label { font-size: 0.75em; color: var(--text-secondary); margin-bottom: 2px; }
-        .time-value { font-family: 'Consolas', monospace; letter-spacing: 0.5px; }
-
+        .list-item.active { border: 1px solid var(--accent-gold); background: rgba(255, 179, 71, 0.1); }
+        
+        .row-header { display: flex; justify-content: space-between; color: var(--text-primary); font-weight: bold; }
+        .row-time { display: flex; justify-content: space-between; font-family: monospace; color: var(--text-secondary); font-size: 0.85em; }
+        
         /* 모바일 대응 */
         @media (max-width: 500px) {
-            .time-row { grid-template-columns: 1fr; }
+            .row-time { flex-direction: column; gap: 2px; }
         }
     </style>
 </head>
 <body>
 
-    <h1>⚔️ 1120 LvD Timeline ⚔️</h1>
-    <div class="sub-title">Global Schedule (KST & UTC)</div>
+    <h1>1120 KVK TIMELINE</h1>
+    <div class="server-time" id="current-time-display">Loading time...</div>
 
-    <div class="timeline-container" id="timeline">
-        </div>
+    <div class="container">
+
+        <details class="section-war" open>
+            <summary>🚩 Major Milestones (주요 일정)</summary>
+            <div class="content-box" id="milestone-list">
+                </div>
+        </details>
+
+        <details class="section-ruins">
+            <summary>🏛️ Ancient Ruins (고대 유적)</summary>
+            <div class="content-box">
+                <div id="ruins-next-box" class="next-event-box" style="display:none;">
+                    <div class="next-label">NEXT RUINS IN</div>
+                    <div class="next-title" id="ruins-next-title">-</div>
+                    <div class="next-timer" id="ruins-next-timer">00:00:00</div>
+                </div>
+                <div id="ruins-list"></div>
+            </div>
+        </details>
+
+        <details class="section-altar">
+            <summary>🔥 Dark Altar (어둠의 제단)</summary>
+            <div class="content-box">
+                <div id="altar-next-box" class="next-event-box" style="display:none;">
+                    <div class="next-label">NEXT ALTAR IN</div>
+                    <div class="next-title" id="altar-next-title">-</div>
+                    <div class="next-timer" id="altar-next-timer">00:00:00</div>
+                </div>
+                <div id="altar-list"></div>
+            </div>
+        </details>
+
+    </div>
 
     <script>
         // =========================================================
-        // 👇 [설정 구역] 여기 날짜들만 수정하세요! (형식: YYYY-MM-DDTHH:mm:00)
+        // 👇 [설정 구역] 이 부분의 날짜만 수정하시면 됩니다!
         // =========================================================
         const config = {
-            // 1. 주요 고정 이벤트 (관문 등)
-            staticEvents: [
-                { titleKr: "잃어버린 왕국 오픈", titleEn: "Lost Kingdom Open", date: "2025-12-09T09:00:00", type: "war" },
-                { titleKr: "4레벨 관문 오픈", titleEn: "Level 4 Pass Open", date: "2025-12-13T12:00:00", type: "war" },
-                { titleKr: "5레벨 관문 오픈", titleEn: "Level 5 Pass Open", date: "2025-12-27T12:00:00", type: "war" },
-                { titleKr: "킹스랜드 (7레벨 관문)", titleEn: "Kingsland (Lv.7 Pass)", date: "2026-01-08T12:00:00", type: "war" },
-                { titleKr: "KvK 시즌 종료", titleEn: "Season End", date: "2026-01-28T09:00:00", type: "war" }
+            // 1. 고정 일정 (관문 등)
+            milestones: [
+                { title: "잃어버린 왕국 오픈", date: "2025-12-09T09:00:00" },
+                { title: "4레벨 관문 오픈", date: "2025-12-13T12:00:00" },
+                { title: "5레벨 관문 오픈", date: "2025-12-27T12:00:00" },
+                { title: "킹스랜드 (7레벨 관문)", date: "2026-01-08T12:00:00" },
+                { title: "KvK 시즌 종료", date: "2026-01-28T09:00:00" }
             ],
-
-            // 2. 폐허 (Ruins) 설정
+            // 2. 폐허 (40시간 간격, 28회) - 첫 시작일 입력
             ruins: {
-                firstDate: "2025-12-17T09:00:00", // ⚠️ 첫 번째 폐허가 열리는 시간
-                intervalHours: 40,                // 40시간 간격
-                count: 28                         // 총 28회
+                start: "2025-12-17T09:00:00", 
+                interval: 40,
+                count: 28
             },
-
-            // 3. 제단 (Altar) 설정
+            // 3. 제단 (86시간 간격, 10회) - 첫 시작일 입력
             altar: {
-                firstDate: "2025-12-20T09:00:00", // ⚠️ 첫 번째 제단이 열리는 시간
-                intervalHours: 86,                // 86시간 간격
-                count: 10                         // 총 10회
+                start: "2025-12-20T09:00:00",
+                interval: 86,
+                count: 10
             }
         };
         // =========================================================
 
-
-        // 날짜 포맷팅 함수 (KST/UTC)
-        function formatDate(dateObj, timeZone) {
-            return dateObj.toLocaleString('en-US', {
-                timeZone: timeZone,
-                month: 'short', day: 'numeric',
-                hour: '2-digit', minute: '2-digit', hour12: false
-            });
+        function formatTime(date) {
+            const kst = date.toLocaleString('en-US', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+            const utc = date.toLocaleString('en-US', { timeZone: 'UTC', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+            return { kst, utc };
         }
 
-        // 전체 이벤트 리스트 생성 함수
-        function generateEvents() {
-            let allEvents = [...config.staticEvents];
-
-            // 폐허 자동 생성
-            const ruinsStart = new Date(config.ruins.firstDate);
-            for (let i = 0; i < config.ruins.count; i++) {
-                const eventDate = new Date(ruinsStart.getTime() + (i * config.ruins.intervalHours * 60 * 60 * 1000));
-                allEvents.push({
-                    titleKr: `고대 유적 (폐허) #${i + 1}`,
-                    titleEn: `Ancient Ruins #${i + 1}`,
-                    date: eventDate.toISOString(),
-                    type: "ruins"
-                });
-            }
-
-            // 제단 자동 생성
-            const altarStart = new Date(config.altar.firstDate);
-            for (let i = 0; i < config.altar.count; i++) {
-                const eventDate = new Date(altarStart.getTime() + (i * config.altar.intervalHours * 60 * 60 * 1000));
-                allEvents.push({
-                    titleKr: `어둠의 제단 #${i + 1}`,
-                    titleEn: `Dark Altar #${i + 1}`,
-                    date: eventDate.toISOString(),
-                    type: "altar"
-                });
-            }
-
-            // 날짜순 정렬
-            allEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
-            return allEvents;
+        function getTimeRemaining(endtime) {
+            const total = Date.parse(endtime) - Date.parse(new Date());
+            const seconds = Math.floor((total / 1000) % 60);
+            const minutes = Math.floor((total / 1000 / 60) % 60);
+            const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+            const days = Math.floor(total / (1000 * 60 * 60 * 24));
+            return { total, days, hours, minutes, seconds };
         }
 
-        function renderTimeline() {
-            const container = document.getElementById('timeline');
+        // 반복 이벤트 생성기 (지난 것 필터링)
+        function generateRepeatingEvents(cfg, nameKr, nameEn) {
+            const list = [];
+            const now = new Date();
+            // 유지 시간 (이벤트가 진행중인 시간). 폐허는 약 1시간, 제단은 약 1~2시간 잡음.
+            // 여기서는 '시작 시간'이 지났으면 리스트에서 뺄지, 진행중이면 남길지 결정.
+            // 요청사항: "지난회차는 사라졌으면" -> 시작시간 기준 과거면 삭제.
+            
+            const startDate = new Date(cfg.start);
+
+            for (let i = 0; i < cfg.count; i++) {
+                const evtDate = new Date(startDate.getTime() + (i * cfg.interval * 60 * 60 * 1000));
+                
+                // 이벤트 시작 시간이 현재보다 미래인 경우에만 리스트에 추가
+                // (약간의 여유를 위해 시작 후 1시간 이내라면 '진행중'으로 표시하기 위해 남길 수도 있음. 여기선 칼같이 미래만 남김)
+                if (evtDate > now - (1000 * 60 * 60)) { // 1시간 전까지는 리스트에 표시 (진행중일수있으니)
+                    list.push({
+                        index: i + 1,
+                        title: `${nameKr} #${i + 1} (${nameEn})`,
+                        date: evtDate
+                    });
+                }
+            }
+            return list;
+        }
+
+        function renderMilestones() {
+            const container = document.getElementById('milestone-list');
             container.innerHTML = '';
-            const events = generateEvents();
             const now = new Date();
 
-            events.forEach(event => {
-                const eventDate = new Date(event.date);
-                const diffMS = eventDate - now;
-                
-                // 상태 결정
-                let statusClass = "";
-                let badgeText = "";
-                let isActive = false;
+            config.milestones.forEach(evt => {
+                const d = new Date(evt.date);
+                const times = formatTime(d);
+                let status = "";
+                let badge = "";
 
-                if (diffMS < -3600000 * 4) { // 4시간 이상 지남 -> 완료
-                    statusClass = "past";
-                    badgeText = "Finished (종료)";
-                } else if (diffMS < 0) { // 지금 진행중 (0 ~ 4시간)
-                    statusClass = "active";
-                    badgeText = "Now Open! (진행중)";
-                    isActive = true;
-                } else { // 미래
-                    const diffHours = Math.floor(diffMS / (1000 * 60 * 60));
-                    const diffDays = Math.floor(diffHours / 24);
-                    
-                    if (diffDays > 0) badgeText = `T-minus ${diffDays}d (D-${diffDays})`;
-                    else badgeText = `T-minus ${diffHours}h (곧 시작)`;
+                if (d < now) {
+                    status = "past"; // CSS에서 흐리게 처리하거나 숨김 (주요 일정은 기록용으로 흐리게 남기는게 좋음)
+                    badge = "✅ END";
+                } else {
+                    const diffDays = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+                    badge = diffDays === 1 ? "🔥 D-Day" : `D-${diffDays}`;
                 }
 
-                const kstTime = formatDate(eventDate, 'Asia/Seoul');
-                const utcTime = formatDate(eventDate, 'UTC');
-
+                // 주요 일정은 지나도 남겨둠 (히스토리용), 원하면 if(d<now) return; 으로 삭제 가능
+                const opacity = status === "past" ? "0.5" : "1";
+                
                 const html = `
-                    <div class="event-card ${statusClass} type-${event.type} ${isActive ? 'active' : ''}">
-                        <div class="header-row">
-                            <div class="event-name">
-                                ${event.titleKr}
-                                <span>${event.titleEn}</span>
-                            </div>
-                            <div class="d-day-badge">${badgeText}</div>
+                    <div class="list-item" style="opacity: ${opacity}">
+                        <div class="row-header">
+                            <span>${evt.title}</span>
+                            <span style="color:var(--accent-gold)">${badge}</span>
                         </div>
-                        <div class="time-row">
-                            <div class="time-box">
-                                <span class="time-label">🇰🇷 Korea (KST)</span>
-                                <span class="time-value">${kstTime}</span>
-                            </div>
-                            <div class="time-box">
-                                <span class="time-label">🌍 Global (UTC)</span>
-                                <span class="time-value">${utcTime}</span>
-                            </div>
+                        <div class="row-time">
+                            <span>🇰🇷 ${times.kst}</span>
+                            <span>🌍 ${times.utc} (UTC)</span>
                         </div>
                     </div>
                 `;
@@ -229,8 +282,77 @@
             });
         }
 
-        renderTimeline();
-        setInterval(renderTimeline, 60000); // 1분마다 갱신
+        function renderRepeatingSection(type, listId, nextBoxId, nextTitleId, nextTimerId) {
+            const container = document.getElementById(listId);
+            const nextBox = document.getElementById(nextBoxId);
+            container.innerHTML = '';
+            
+            let events = [];
+            if (type === 'ruins') events = generateRepeatingEvents(config.ruins, "고대 유적", "Ruins");
+            else events = generateRepeatingEvents(config.altar, "어둠의 제단", "Altar");
+
+            if (events.length === 0) {
+                container.innerHTML = '<div style="padding:10px; color:#666;">All events completed.</div>';
+                nextBox.style.display = 'none';
+                return;
+            }
+
+            // 가장 가까운 다음 이벤트 (배열의 0번째가 됨, 위에서 필터링 했으므로)
+            const nextEvent = events[0];
+            const now = new Date();
+
+            // Next Box 업데이트
+            nextBox.style.display = 'block';
+            document.getElementById(nextTitleId).innerText = nextEvent.title;
+            
+            const t = getTimeRemaining(nextEvent.date);
+            if (t.total <= 0) {
+                 document.getElementById(nextTimerId).innerText = "OPEN NOW!";
+                 document.getElementById(nextTimerId).style.color = "#00e676";
+            } else {
+                // 시:분:초 카운트다운
+                const formatted = `${t.days > 0 ? t.days + 'd ' : ''}${('0'+t.hours).slice(-2)}:${('0'+t.minutes).slice(-2)}:${('0'+t.seconds).slice(-2)}`;
+                document.getElementById(nextTimerId).innerText = formatted;
+                document.getElementById(nextTimerId).style.color = "white";
+            }
+
+            // 리스트 렌더링 (다음것 포함 나머지 미래 일정들)
+            events.forEach((evt, idx) => {
+                const times = formatTime(evt.date);
+                const isNext = (idx === 0);
+                const activeClass = isNext ? "active" : "";
+                
+                const html = `
+                    <div class="list-item ${activeClass}">
+                        <div class="row-header">
+                            <span>${evt.title}</span>
+                        </div>
+                        <div class="row-time">
+                            <span>🇰🇷 ${times.kst}</span>
+                            <span>🌍 ${times.utc}</span>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function updateAll() {
+            // 현재 시간 표시
+            const now = new Date();
+            document.getElementById('current-time-display').innerText = 
+                `Current: ${now.toLocaleString('en-US', {timeZone: 'Asia/Seoul', hour12:false})} (KST)`;
+
+            // 렌더링
+            renderMilestones();
+            renderRepeatingSection('ruins', 'ruins-list', 'ruins-next-box', 'ruins-next-title', 'ruins-next-timer');
+            renderRepeatingSection('altar', 'altar-list', 'altar-next-box', 'altar-next-title', 'altar-next-timer');
+        }
+
+        // 초기 실행 및 1초마다 갱신 (카운트다운 위해)
+        updateAll();
+        setInterval(updateAll, 1000);
+
     </script>
 </body>
 </html>
