@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoK KVK Timeline (Fixed)</title>
+    <title>KVK 1120 MAP DASHBOARD</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* ============================
-           디자인 시스템 (Dark Theme)
+           디자인 시스템
            ============================ */
         :root {
             --bg-color: #0f1219;
@@ -17,7 +18,6 @@
             --ruins-color: #4fc3f7; 
             --altar-color: #ba68c8;
             --war-color: #e57373;
-            --timer-bg: #2d3342;
         }
 
         body {
@@ -29,229 +29,189 @@
             text-align: center;
         }
 
-        h1 {
-            color: var(--accent-gold);
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            font-size: 1.5em;
+        h1 { color: var(--accent-gold); margin-bottom: 10px; }
+        .server-time { color: var(--text-secondary); margin-bottom: 20px; font-family: monospace; }
+
+        /* ============================
+           🗺️ 지도 (MAP) 스타일
+           ============================ */
+        .map-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* 지도 최대 너비 */
+            aspect-ratio: 16 / 9; /* 지도의 가로세로 비율 (이미지에 맞춰 수정 가능) */
+            margin: 0 auto 30px auto;
+            border-radius: 12px;
+            border: 2px solid #444;
+            overflow: hidden;
+            
+            /* 👇 [중요] 여기에 실제 지도 이미지 URL을 넣으세요! */
+            /* 예: background-image: url('my_kvk_map.jpg'); */
+            background-color: #222; 
+            background-image: linear-gradient(45deg, #1a1a1a 25%, #2a2a2a 25%, #2a2a2a 50%, #1a1a1a 50%, #1a1a1a 75%, #2a2a2a 75%, #2a2a2a 100%);
+            background-size: 40px 40px; /* 패턴 크기 (이미지 넣으면 삭제 가능) */
         }
 
-        .server-time {
-            font-size: 0.9em;
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-            font-family: monospace;
+        .map-overlay-text {
+            position: absolute;
+            top: 10px; left: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            color: #aaa;
         }
 
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
+        /* 📍 핀(Marker) 공통 스타일 */
+        .map-pin {
+            position: absolute;
+            transform: translate(-50%, -50%); /* 중심점 기준 배치 */
             display: flex;
             flex-direction: column;
-            gap: 15px;
-        }
-
-        /* 아코디언 스타일 */
-        details {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #333;
-            transition: all 0.3s ease;
-        }
-
-        details[open] {
-            border-color: #555;
-            padding-bottom: 15px;
-        }
-
-        summary {
-            padding: 15px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.1em;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            background-color: rgba(255, 255, 255, 0.05);
-            list-style: none;
-            user-select: none;
-            color: var(--text-primary);
+            cursor: pointer;
+            transition: transform 0.2s;
         }
+        .map-pin:hover { transform: translate(-50%, -50%) scale(1.1); z-index: 10; }
+
+        /* 핀 아이콘 (동그라미) */
+        .pin-icon {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        /* 핀 라벨 (타이머 박스) */
+        .pin-label {
+            margin-top: 5px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-align: center;
+            min-width: 80px;
+            border: 1px solid #555;
+        }
+        .pin-name { font-size: 0.75em; color: #ddd; margin-bottom: 2px; }
+        .pin-timer { font-size: 0.9em; font-weight: bold; font-family: monospace; color: white; }
+
+        /* 타입별 색상 */
+        .pin-milestone .pin-icon { background-color: var(--war-color); }
+        .pin-ruins .pin-icon { background-color: var(--ruins-color); }
+        .pin-altar .pin-icon { background-color: var(--altar-color); }
         
-        summary::-webkit-details-marker { display: none; }
-        summary:hover { background-color: rgba(255, 255, 255, 0.1); }
-        summary::after {
-            content: '▼';
-            font-size: 0.8em;
-            color: var(--text-secondary);
-            transition: transform 0.3s;
+        .pin-milestone .pin-timer { color: var(--war-color); }
+        .pin-ruins .pin-timer { color: var(--ruins-color); }
+        .pin-altar .pin-timer { color: var(--altar-color); }
+
+        /* ============================
+           기타 UI (캡처 버튼 등)
+           ============================ */
+        .btn-capture {
+            background-color: #333; color: white; border: 1px solid #555;
+            padding: 8px 16px; border-radius: 20px; cursor: pointer;
+            margin-bottom: 20px;
         }
-        details[open] summary::after { transform: rotate(180deg); }
+        .btn-capture:hover { background-color: #444; border-color: var(--accent-gold); }
 
-        /* 섹션별 색상 띠 */
-        .section-war summary { border-left: 5px solid var(--war-color); }
-        .section-ruins summary { border-left: 5px solid var(--ruins-color); }
-        .section-altar summary { border-left: 5px solid var(--altar-color); }
-
-        /* 콘텐츠 박스 */
-        .content-box {
-            padding: 0 15px;
+        /* 기존 리스트 컨테이너 (지도 아래로 배치) */
+        .container {
+            max-width: 700px; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 10px;
             text-align: left;
         }
+        
+        /* 리스트 스타일 간소화 */
+        details { background: var(--card-bg); border-radius: 8px; border: 1px solid #333; margin-bottom: 5px; }
+        summary { padding: 10px 15px; cursor: pointer; font-weight: bold; list-style: none; display: flex; justify-content: space-between; }
+        .content-box { padding: 10px; }
+        .list-item { background: rgba(0,0,0,0.2); padding: 8px; margin-bottom: 5px; border-radius: 4px; font-size: 0.85em; display: flex; justify-content: space-between; }
+        .list-item.active { border: 1px solid var(--accent-gold); }
 
-        /* 카운트다운 박스 */
-        .next-event-box {
-            background-color: var(--timer-bg);
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px 0;
-            text-align: center;
-            border: 1px solid #444;
-        }
-        .next-label { font-size: 0.8em; color: var(--accent-gold); margin-bottom: 5px; opacity: 0.8; }
-        .next-timer { font-size: 1.6em; font-weight: bold; font-family: monospace; letter-spacing: 1px; color: white; }
-        .next-title { font-size: 1.1em; margin-bottom: 5px; color: white; font-weight: 600; }
-        
-        /* 리스트 아이템 */
-        .list-item {
-            background: rgba(0,0,0,0.2);
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .list-item.active { 
-            border: 1px solid var(--accent-gold); 
-            background: rgba(255, 179, 71, 0.1); 
-        }
-        .list-item.past {
-            opacity: 0.5;
-        }
-        
-        .row-header { display: flex; justify-content: space-between; color: var(--text-primary); font-weight: bold; align-items: center; }
-        .row-sub { font-size: 0.85em; color: #888; margin-bottom: 4px; }
-        .row-time { display: flex; justify-content: space-between; font-family: monospace; color: var(--text-secondary); font-size: 0.85em; }
-        
-        .badge {
-            font-size: 0.75em;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: #333;
-            color: #ddd;
-        }
-        .badge.d-day { background: var(--war-color); color: white; }
-        .badge.next { background: var(--accent-gold); color: black; font-weight: bold; }
-
-        /* 모바일 대응 */
         @media (max-width: 500px) {
-            .row-time { flex-direction: column; gap: 2px; }
-            h1 { font-size: 1.2em; }
+            .map-container { aspect-ratio: 1 / 1; } /* 모바일은 정사각형 */
         }
     </style>
 </head>
 <body>
 
-    <h1>KVK TIMELINE</h1>
-    <div class="server-time" id="current-time-display">Loading system...</div>
+    <div id="capture-area">
+        <h1>KVK 1120 MAP DASHBOARD</h1>
+        <div class="server-time" id="current-time-display">Loading...</div>
 
-    <div class="container">
+        <div class="map-container">
+            <div class="map-overlay-text">Map Visualization</div>
 
-        <details class="section-war" open>
-            <summary>🚩 Major Milestones (주요 일정)</summary>
-            <div class="content-box">
-                <div id="milestone-next-box" class="next-event-box" style="display:none;">
-                    <div class="next-label">UPCOMING MILESTONE IN</div>
-                    <div class="next-title" id="milestone-next-title">-</div>
-                    <div class="next-timer" id="milestone-next-timer">00:00:00</div>
+            <div class="map-pin pin-milestone" style="top: 50%; left: 50%;">
+                <div class="pin-icon">🚩</div>
+                <div class="pin-label">
+                    <div class="pin-name" id="map-milestone-name">Next Pass</div>
+                    <div class="pin-timer" id="map-milestone-timer">--:--:--</div>
                 </div>
-                <div id="milestone-list"></div>
             </div>
-        </details>
 
-        <details class="section-ruins">
-            <summary>🏛️ Ancient Ruins (고대 유적)</summary>
-            <div class="content-box">
-                <div id="ruins-next-box" class="next-event-box" style="display:none;">
-                    <div class="next-label">NEXT RUINS IN</div>
-                    <div class="next-title" id="ruins-next-title">-</div>
-                    <div class="next-timer" id="ruins-next-timer">00:00:00</div>
+            <div class="map-pin pin-ruins" style="top: 30%; left: 25%;">
+                <div class="pin-icon">🏛️</div>
+                <div class="pin-label">
+                    <div class="pin-name">Next Ruins</div>
+                    <div class="pin-timer" id="map-ruins-timer">--:--:--</div>
                 </div>
-                <div id="ruins-list"></div>
             </div>
-        </details>
 
-        <details class="section-altar">
-            <summary>🔥 Dark Altar (어둠의 제단)</summary>
-            <div class="content-box">
-                <div id="altar-next-box" class="next-event-box" style="display:none;">
-                    <div class="next-label">NEXT ALTAR IN</div>
-                    <div class="next-title" id="altar-next-title">-</div>
-                    <div class="next-timer" id="altar-next-timer">00:00:00</div>
+            <div class="map-pin pin-altar" style="top: 70%; left: 75%;">
+                <div class="pin-icon">🔥</div>
+                <div class="pin-label">
+                    <div class="pin-name">Next Altar</div>
+                    <div class="pin-timer" id="map-altar-timer">--:--:--</div>
                 </div>
-                <div id="altar-list"></div>
             </div>
-        </details>
+        </div>
 
+        <div class="container">
+            <details>
+                <summary>📜 Schedule List (상세 일정표)</summary>
+                <div class="content-box">
+                    <div id="milestone-list"></div>
+                    <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
+                    <div style="font-weight:bold; color:var(--ruins-color); margin-bottom:5px;">Ruins Schedule</div>
+                    <div id="ruins-list"></div>
+                    <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
+                    <div style="font-weight:bold; color:var(--altar-color); margin-bottom:5px;">Altar Schedule</div>
+                    <div id="altar-list"></div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button class="btn-capture" onclick="saveAsImage()">📸 Save Map as Image</button>
     </div>
 
     <script>
-        // 에러 발생 시 경고창 띄우기 (디버깅용)
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            alert("⚠️ 오류 발생: " + msg + "\n줄 번호: " + lineNo);
-            return false;
-        };
-
-        // DOM이 로드된 후 실행
-        window.onload = function() {
-            try {
-                initializeApp();
-            } catch (e) {
-                alert("초기화 중 오류가 발생했습니다: " + e.message);
-                console.error(e);
-            }
-        };
-
         // =========================================================
-        // 👇 [설정 구역] 날짜와 문구를 여기서 수정하세요
+        // 👇 [설정] 날짜 데이터
         // =========================================================
         const config = {
             milestones: [
-                { titleKr: "잃어버린 왕국 오픈", titleEn: "Lost Kingdom Opens", date: "2025-12-09T09:00:00" },
-                { titleKr: "4관문 오픈", titleEn: "Gate 4 Opens", date: "2025-12-13T12:00:00" },
-                { titleKr: "5관문 오픈", titleEn: "Gate 5 Opens", date: "2025-12-27T12:00:00" },
-                { titleKr: "킹스랜드 (7관문)", titleEn: "Kingsland (Gate 7)", date: "2026-01-08T12:00:00" },
-                { titleKr: "KvK 시즌 종료", titleEn: "Season End", date: "2026-01-28T09:00:00" }
+                { title: "잃어버린 왕국", date: "2025-12-09T09:00:00" },
+                { title: "4관문 오픈", date: "2025-12-13T12:00:00" },
+                { title: "5관문 오픈", date: "2025-12-27T12:00:00" },
+                { title: "킹스랜드", date: "2026-01-08T12:00:00" },
+                { title: "시즌 종료", date: "2026-01-28T09:00:00" }
             ],
-            ruins: {
-                start: "2025-12-17T09:00:00", 
-                interval: 40,
-                count: 28
-            },
-            altar: {
-                start: "2025-12-20T09:00:00",
-                interval: 86,
-                count: 10
-            }
+            ruins: { start: "2025-12-17T09:00:00", interval: 40, count: 28 },
+            altar: { start: "2025-12-20T09:00:00", interval: 86, count: 10 }
         };
 
-        // 전역 변수
-        let targets = {
-            milestone: null,
-            ruins: null,
-            altar: null
-        };
+        let targets = { milestone: null, ruins: null, altar: null };
 
-        function formatTime(dateObj) {
-            const kst = dateObj.toLocaleString('en-US', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
-            const utc = dateObj.toLocaleString('en-US', { timeZone: 'UTC', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
-            return { kst, utc };
-        }
-
+        // =========================================================
+        // 👇 [기능 로직]
+        // =========================================================
         function getTimeRemaining(endtime) {
             const total = Date.parse(endtime) - Date.parse(new Date());
             const seconds = Math.floor((total / 1000) % 60);
@@ -261,173 +221,93 @@
             return { total, days, hours, minutes, seconds };
         }
 
-        function getDdayBadge(dateObj) {
-            const now = new Date();
-            const diffTime = dateObj - now;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            
-            if (diffTime < 0) return `<span class="badge">END</span>`;
-            if (diffDays <= 1) return `<span class="badge d-day">D-Day</span>`;
-            return `<span class="badge">D-${diffDays}</span>`;
-        }
-
-        function generateRepeatingEvents(cfg, nameKr, nameEn) {
+        function generateEvents(cfg, name) {
             const list = [];
-            const startDate = new Date(cfg.start);
+            const start = new Date(cfg.start);
             const now = new Date();
-
             for (let i = 0; i < cfg.count; i++) {
-                const evtDate = new Date(startDate.getTime() + (i * cfg.interval * 60 * 60 * 1000));
-                // 1시간 전까지는 리스트에 표시
-                if (evtDate > now - (1000 * 60 * 60)) {
-                    list.push({
-                        index: i + 1,
-                        titleKr: `${nameKr} (${i + 1}회차)`,
-                        titleEn: `${nameEn} #${i + 1}`,
-                        date: evtDate
-                    });
-                }
+                const d = new Date(start.getTime() + (i * cfg.interval * 60 * 60 * 1000));
+                if (d > now - 3600000) list.push({ title: `${name} #${i+1}`, date: d });
             }
             return list;
         }
 
-        // 반복 일정 렌더링 함수 (renderRepeatingSection)
-        function renderRepeatingSection(type, cfg, nameKr, nameEn, listId, boxId, titleId) {
-            const events = generateRepeatingEvents(cfg, nameKr, nameEn);
-            const container = document.getElementById(listId);
-            const nextBox = document.getElementById(boxId);
-            
-            if (!container) return; // 요소가 없으면 중단
-
-            if (events.length === 0) {
-                container.innerHTML = '<div style="padding:10px; color:#666;">종료된 일정입니다 (All Completed)</div>';
-                return;
-            }
-
-            // 다음 타겟 설정
-            targets[type] = events[0].date;
-            
-            // 박스 표시 및 제목 설정
-            if(nextBox) nextBox.style.display = 'block';
-            const titleEl = document.getElementById(titleId);
-            if(titleEl) titleEl.innerText = `${events[0].titleKr} / ${events[0].titleEn}`;
-
-            // 리스트 생성
-            let htmlBuffer = "";
-            events.forEach((evt, idx) => {
-                const times = formatTime(evt.date);
-                const isNext = (idx === 0);
-                
-                htmlBuffer += `
-                    <div class="list-item ${isNext ? 'active' : ''}">
-                        <div class="row-header">
-                            <span>${evt.titleKr}</span>
-                            ${isNext ? '<span class="badge next">NEXT</span>' : ''}
-                        </div>
-                        <div class="row-sub">${evt.titleEn}</div>
-                        <div class="row-time">
-                            <span>🇰🇷 ${times.kst}</span>
-                            <span>🌍 ${times.utc}</span>
-                        </div>
-                    </div>`;
-            });
-            container.innerHTML = htmlBuffer;
-        }
-
-        function initializeApp() {
+        function init() {
             const now = new Date();
 
-            // 1. 주요 일정(Milestones) 렌더링
+            // 1. 주요 일정 (관문) 로직
             const mileContainer = document.getElementById('milestone-list');
-            if (mileContainer) {
-                let nextMileFound = false;
-                let htmlBuffer = "";
+            let nextMile = null;
+            config.milestones.forEach(m => {
+                const d = new Date(m.date);
+                const isPast = d < now;
+                if (!isPast && !nextMile) {
+                    nextMile = m;
+                    targets.milestone = d;
+                    // 지도 핀 이름 업데이트
+                    document.getElementById('map-milestone-name').innerText = m.title;
+                }
+                // 리스트 추가
+                mileContainer.innerHTML += `<div class="list-item ${isPast?'':'active'}"><span>${m.title}</span><span>${d.toLocaleDateString()}</span></div>`;
+            });
 
-                config.milestones.forEach(evt => {
-                    const d = new Date(evt.date);
-                    const times = formatTime(d);
-                    const isPast = d < now; // 단순 과거 여부 체크
-                    const badge = getDdayBadge(d);
-                    
-                    // 다음 타겟 찾기 logic
-                    if (!isPast && !nextMileFound) {
-                        targets.milestone = d;
-                        const titleEl = document.getElementById('milestone-next-title');
-                        const boxEl = document.getElementById('milestone-next-box');
-                        
-                        if(titleEl) titleEl.innerText = `${evt.titleKr} / ${evt.titleEn}`;
-                        if(boxEl) boxEl.style.display = 'block';
-                        nextMileFound = true;
-                    }
-                    
-                    // 현재 타겟과 같은지 확인 (getTime 비교로 안전하게)
-                    const isActive = (targets.milestone && targets.milestone.getTime() === d.getTime());
-
-                    htmlBuffer += `
-                        <div class="list-item ${isPast ? 'past' : (isActive ? 'active' : '')}">
-                            <div class="row-header">
-                                <span>${evt.titleKr}</span>
-                                ${badge}
-                            </div>
-                            <div class="row-sub">${evt.titleEn}</div>
-                            <div class="row-time">
-                                <span>🇰🇷 ${times.kst}</span>
-                                <span>🌍 ${times.utc} (UTC)</span>
-                            </div>
-                        </div>`;
-                });
-                mileContainer.innerHTML = htmlBuffer;
-            }
-
-            // 2. 반복 일정 렌더링
-            renderRepeatingSection('ruins', config.ruins, "고대 유적", "Ruins", 'ruins-list', 'ruins-next-box', 'ruins-next-title');
-            renderRepeatingSection('altar', config.altar, "어둠의 제단", "Altar", 'altar-list', 'altar-next-box', 'altar-next-title');
-
-            // 3. 타이머 시작
-            setInterval(updateTimers, 1000); 
-            updateTimers(); 
-        }
-
-        // 타이머 업데이트 함수
-        function updateTimers() {
-            const now = new Date();
-            const timeDisplay = document.getElementById('current-time-display');
-            if(timeDisplay) {
-                timeDisplay.innerText = `Current: ${now.toLocaleString('en-US', {timeZone: 'Asia/Seoul', hour12:false})} (KST)`;
-            }
-
-            function updateCount(targetDate, elementId) {
-                const el = document.getElementById(elementId);
-                if (!el) return;
+            // 2. 유적/제단 로직
+            function setupRepeat(type, cfg, name, listId, timerId) {
+                const events = generateEvents(cfg, name);
+                const container = document.getElementById(listId);
                 
-                if (!targetDate) {
-                    // 타겟이 없는 경우 (모든 일정 종료 등)
-                    // el.innerText = "Waiting..."; 
-                    return;
-                }
-
-                const t = getTimeRemaining(targetDate);
-
-                if (t.total <= 0) {
-                    el.innerText = "OPEN NOW!";
-                    el.style.color = "#00e676";
+                if(events.length > 0) {
+                    targets[type] = events[0].date;
+                    events.slice(0, 3).forEach(e => { // 리스트엔 3개만 표시
+                         container.innerHTML += `<div class="list-item"><span>${e.title}</span><span>${e.date.toLocaleString()}</span></div>`;
+                    });
                 } else {
-                    // 음수 방지
-                    const d = t.days > 0 ? t.days : 0;
-                    const h = t.hours > 0 ? t.hours : 0;
-                    const m = t.minutes > 0 ? t.minutes : 0;
-                    const s = t.seconds > 0 ? t.seconds : 0;
-
-                    const formatted = `${d > 0 ? d + 'd ' : ''}${('0'+h).slice(-2)}:${('0'+m).slice(-2)}:${('0'+s).slice(-2)}`;
-                    el.innerText = formatted;
-                    el.style.color = "white";
+                    container.innerHTML = "<div>Finished</div>";
+                    document.getElementById(timerId).innerText = "END";
                 }
             }
 
-            updateCount(targets.milestone, 'milestone-next-timer');
-            updateCount(targets.ruins, 'ruins-next-timer');
-            updateCount(targets.altar, 'altar-next-timer');
+            setupRepeat('ruins', config.ruins, "Ruins", 'ruins-list', 'map-ruins-timer');
+            setupRepeat('altar', config.altar, "Altar", 'altar-list', 'map-altar-timer');
+
+            setInterval(update, 1000);
+            update();
         }
+
+        function update() {
+            const now = new Date();
+            document.getElementById('current-time-display').innerText = now.toLocaleString('en-US', {hour12:false});
+
+            function setTimer(target, id) {
+                const el = document.getElementById(id);
+                if(!target) { el.innerText = "OPEN"; el.style.color="#0f0"; return; }
+                const t = getTimeRemaining(target);
+                if(t.total <= 0) {
+                     el.innerText = "OPEN NOW"; 
+                     el.style.color = "#00e676";
+                } else {
+                     el.innerText = `${t.days}d ${('0'+t.hours).slice(-2)}:${('0'+t.minutes).slice(-2)}:${('0'+t.seconds).slice(-2)}`;
+                     el.style.color = "white";
+                }
+            }
+
+            setTimer(targets.milestone, 'map-milestone-timer');
+            setTimer(targets.ruins, 'map-ruins-timer');
+            setTimer(targets.altar, 'map-altar-timer');
+        }
+
+        function saveAsImage() {
+            html2canvas(document.getElementById('capture-area'), { 
+                scale: 2, backgroundColor: "#0f1219" 
+            }).then(c => {
+                const a = document.createElement('a');
+                a.download = 'KVK_Map_Status.png';
+                a.href = c.toDataURL();
+                a.click();
+            });
+        }
+
+        init();
     </script>
 </body>
 </html>
