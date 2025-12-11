@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoK KVK Timeline (Fixed)</title>
+    <title>RoK KVK 1120 Command Center</title>
     <style>
         /* ============================
            디자인 시스템 (Dark Theme)
@@ -18,6 +18,7 @@
             --altar-color: #ba68c8;
             --war-color: #e57373;
             --timer-bg: #2d3342;
+            --safe-color: #81c784; /* 안전/아군 색상 */
         }
 
         body {
@@ -40,7 +41,7 @@
         .server-time {
             font-size: 0.9em;
             color: var(--text-secondary);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-family: monospace;
         }
 
@@ -52,7 +53,33 @@
             gap: 15px;
         }
 
-        /* 아코디언 스타일 */
+        /* === [NEW] 워 룸 대시보드 스타일 === */
+        .dashboard-grid {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .dashboard-card {
+            flex: 1;
+            min-width: 280px;
+            background: var(--card-bg);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: left;
+        }
+        .dash-title {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+            font-weight: bold;
+        }
+        .diplomacy-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9em; }
+        .rules-list { margin: 0; padding-left: 20px; font-size: 0.9em; color: #ddd; line-height: 1.6; }
+
+        /* === 아코디언 스타일 === */
         details {
             background-color: var(--card-bg);
             border-radius: 8px;
@@ -61,10 +88,7 @@
             transition: all 0.3s ease;
         }
 
-        details[open] {
-            border-color: #555;
-            padding-bottom: 15px;
-        }
+        details[open] { border-color: #555; padding-bottom: 15px; }
 
         summary {
             padding: 15px 20px;
@@ -95,11 +119,7 @@
         .section-ruins summary { border-left: 5px solid var(--ruins-color); }
         .section-altar summary { border-left: 5px solid var(--altar-color); }
 
-        /* 콘텐츠 박스 */
-        .content-box {
-            padding: 0 15px;
-            text-align: left;
-        }
+        .content-box { padding: 0 15px; text-align: left; }
 
         /* 카운트다운 박스 */
         .next-event-box {
@@ -109,11 +129,27 @@
             margin: 15px 0;
             text-align: center;
             border: 1px solid #444;
+            position: relative; /* 복사 버튼 배치를 위해 */
         }
         .next-label { font-size: 0.8em; color: var(--accent-gold); margin-bottom: 5px; opacity: 0.8; }
         .next-timer { font-size: 1.6em; font-weight: bold; font-family: monospace; letter-spacing: 1px; color: white; }
         .next-title { font-size: 1.1em; margin-bottom: 5px; color: white; font-weight: 600; }
         
+        /* === [NEW] 복사 버튼 스타일 === */
+        .btn-copy {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #666;
+            color: #ccc;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.75em;
+            cursor: pointer;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .btn-copy:hover { background: rgba(255,255,255,0.2); color: white; }
+        .btn-copy:active { transform: scale(0.95); }
+
         /* 리스트 아이템 */
         .list-item {
             background: rgba(0,0,0,0.2);
@@ -129,44 +165,66 @@
             border: 1px solid var(--accent-gold); 
             background: rgba(255, 179, 71, 0.1); 
         }
-        .list-item.past {
-            opacity: 0.5;
-        }
+        .list-item.past { opacity: 0.5; }
         
         .row-header { display: flex; justify-content: space-between; color: var(--text-primary); font-weight: bold; align-items: center; }
         .row-sub { font-size: 0.85em; color: #888; margin-bottom: 4px; }
         .row-time { display: flex; justify-content: space-between; font-family: monospace; color: var(--text-secondary); font-size: 0.85em; }
         
         .badge {
-            font-size: 0.75em;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: #333;
-            color: #ddd;
+            font-size: 0.75em; padding: 2px 6px; border-radius: 4px; background: #333; color: #ddd;
         }
         .badge.d-day { background: var(--war-color); color: white; }
         .badge.next { background: var(--accent-gold); color: black; font-weight: bold; }
 
-        /* 모바일 대응 */
         @media (max-width: 500px) {
             .row-time { flex-direction: column; gap: 2px; }
             h1 { font-size: 1.2em; }
+            .dashboard-grid { flex-direction: column; }
         }
     </style>
 </head>
 <body>
 
-    <h1>KVK TIMELINE</h1>
+    <h1>KVK 1120 COMMAND CENTER</h1>
     <div class="server-time" id="current-time-display">Loading system...</div>
 
     <div class="container">
 
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="dash-title" style="color: var(--safe-color);">🤝 Diplomacy (외교)</div>
+                <div class="diplomacy-row">
+                    <span style="color: var(--safe-color); font-weight:bold;">🔵 Allies (아군)</span>
+                    <span>#1121, #1122</span>
+                </div>
+                <div class="diplomacy-row">
+                    <span style="color: white; font-weight:bold;">⚪ NAP (불가침)</span>
+                    <span>#1125</span>
+                </div>
+                <div class="diplomacy-row">
+                    <span style="color: var(--war-color); font-weight:bold;">🔴 Enemy (적군)</span>
+                    <span>#1130, #1131</span>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <div class="dash-title" style="color: var(--accent-gold);">📢 Rules (공지사항)</div>
+                <ul class="rules-list">
+                    <li>🛡️ <strong>MGE Limit:</strong> 15,000,000 pts</li>
+                    <li>🚜 <strong>Farming:</strong> Free for all (채집킬X)</li>
+                    <li>⛔ <strong>City Hit:</strong> 금지 (Zeroing Prohibited)</li>
+                </ul>
+            </div>
+        </div>
         <details class="section-war" open>
             <summary>🚩 Major Milestones (주요 일정)</summary>
             <div class="content-box">
                 <div id="milestone-next-box" class="next-event-box" style="display:none;">
                     <div class="next-label">UPCOMING MILESTONE IN</div>
-                    <div class="next-title" id="milestone-next-title">-</div>
+                    <div class="next-title">
+                        <span id="milestone-next-title">-</span>
+                        <button class="btn-copy" onclick="copyToClipboard('milestone')">Copy</button>
+                    </div>
                     <div class="next-timer" id="milestone-next-timer">00:00:00</div>
                 </div>
                 <div id="milestone-list"></div>
@@ -178,7 +236,10 @@
             <div class="content-box">
                 <div id="ruins-next-box" class="next-event-box" style="display:none;">
                     <div class="next-label">NEXT RUINS IN</div>
-                    <div class="next-title" id="ruins-next-title">-</div>
+                    <div class="next-title">
+                        <span id="ruins-next-title">-</span>
+                        <button class="btn-copy" onclick="copyToClipboard('ruins')">Copy</button>
+                    </div>
                     <div class="next-timer" id="ruins-next-timer">00:00:00</div>
                 </div>
                 <div id="ruins-list"></div>
@@ -190,7 +251,10 @@
             <div class="content-box">
                 <div id="altar-next-box" class="next-event-box" style="display:none;">
                     <div class="next-label">NEXT ALTAR IN</div>
-                    <div class="next-title" id="altar-next-title">-</div>
+                    <div class="next-title">
+                        <span id="altar-next-title">-</span>
+                        <button class="btn-copy" onclick="copyToClipboard('altar')">Copy</button>
+                    </div>
                     <div class="next-timer" id="altar-next-timer">00:00:00</div>
                 </div>
                 <div id="altar-list"></div>
@@ -200,24 +264,19 @@
     </div>
 
     <script>
-        // 에러 발생 시 경고창 띄우기 (디버깅용)
+        // 에러 방지
         window.onerror = function(msg, url, lineNo, columnNo, error) {
             alert("⚠️ 오류 발생: " + msg + "\n줄 번호: " + lineNo);
             return false;
         };
 
-        // DOM이 로드된 후 실행
         window.onload = function() {
-            try {
-                initializeApp();
-            } catch (e) {
-                alert("초기화 중 오류가 발생했습니다: " + e.message);
-                console.error(e);
-            }
+            try { initializeApp(); } 
+            catch (e) { console.error(e); }
         };
 
         // =========================================================
-        // 👇 [설정 구역] 날짜와 문구를 여기서 수정하세요
+        // 👇 [설정 구역]
         // =========================================================
         const config = {
             milestones: [
@@ -227,24 +286,12 @@
                 { titleKr: "킹스랜드 (7관문)", titleEn: "Kingsland (Gate 7)", date: "2026-01-08T12:00:00" },
                 { titleKr: "KvK 시즌 종료", titleEn: "Season End", date: "2026-01-28T09:00:00" }
             ],
-            ruins: {
-                start: "2025-12-17T09:00:00", 
-                interval: 40,
-                count: 28
-            },
-            altar: {
-                start: "2025-12-20T09:00:00",
-                interval: 86,
-                count: 10
-            }
+            ruins: { start: "2025-12-17T09:00:00", interval: 40, count: 28 },
+            altar: { start: "2025-12-20T09:00:00", interval: 86, count: 10 }
         };
 
         // 전역 변수
-        let targets = {
-            milestone: null,
-            ruins: null,
-            altar: null
-        };
+        let targets = { milestone: null, ruins: null, altar: null };
 
         function formatTime(dateObj) {
             const kst = dateObj.toLocaleString('en-US', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
@@ -265,7 +312,6 @@
             const now = new Date();
             const diffTime = dateObj - now;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            
             if (diffTime < 0) return `<span class="badge">END</span>`;
             if (diffDays <= 1) return `<span class="badge d-day">D-Day</span>`;
             return `<span class="badge">D-${diffDays}</span>`;
@@ -275,10 +321,8 @@
             const list = [];
             const startDate = new Date(cfg.start);
             const now = new Date();
-
             for (let i = 0; i < cfg.count; i++) {
                 const evtDate = new Date(startDate.getTime() + (i * cfg.interval * 60 * 60 * 1000));
-                // 1시간 전까지는 리스트에 표시
                 if (evtDate > now - (1000 * 60 * 60)) {
                     list.push({
                         index: i + 1,
@@ -291,33 +335,26 @@
             return list;
         }
 
-        // 반복 일정 렌더링 함수 (renderRepeatingSection)
         function renderRepeatingSection(type, cfg, nameKr, nameEn, listId, boxId, titleId) {
             const events = generateRepeatingEvents(cfg, nameKr, nameEn);
             const container = document.getElementById(listId);
             const nextBox = document.getElementById(boxId);
             
-            if (!container) return; // 요소가 없으면 중단
-
+            if (!container) return;
             if (events.length === 0) {
                 container.innerHTML = '<div style="padding:10px; color:#666;">종료된 일정입니다 (All Completed)</div>';
                 return;
             }
 
-            // 다음 타겟 설정
             targets[type] = events[0].date;
-            
-            // 박스 표시 및 제목 설정
             if(nextBox) nextBox.style.display = 'block';
             const titleEl = document.getElementById(titleId);
             if(titleEl) titleEl.innerText = `${events[0].titleKr} / ${events[0].titleEn}`;
 
-            // 리스트 생성
             let htmlBuffer = "";
             events.forEach((evt, idx) => {
                 const times = formatTime(evt.date);
                 const isNext = (idx === 0);
-                
                 htmlBuffer += `
                     <div class="list-item ${isNext ? 'active' : ''}">
                         <div class="row-header">
@@ -336,8 +373,6 @@
 
         function initializeApp() {
             const now = new Date();
-
-            // 1. 주요 일정(Milestones) 렌더링
             const mileContainer = document.getElementById('milestone-list');
             if (mileContainer) {
                 let nextMileFound = false;
@@ -346,23 +381,18 @@
                 config.milestones.forEach(evt => {
                     const d = new Date(evt.date);
                     const times = formatTime(d);
-                    const isPast = d < now; // 단순 과거 여부 체크
+                    const isPast = d < now; 
                     const badge = getDdayBadge(d);
                     
-                    // 다음 타겟 찾기 logic
                     if (!isPast && !nextMileFound) {
                         targets.milestone = d;
                         const titleEl = document.getElementById('milestone-next-title');
                         const boxEl = document.getElementById('milestone-next-box');
-                        
                         if(titleEl) titleEl.innerText = `${evt.titleKr} / ${evt.titleEn}`;
                         if(boxEl) boxEl.style.display = 'block';
                         nextMileFound = true;
                     }
-                    
-                    // 현재 타겟과 같은지 확인 (getTime 비교로 안전하게)
                     const isActive = (targets.milestone && targets.milestone.getTime() === d.getTime());
-
                     htmlBuffer += `
                         <div class="list-item ${isPast ? 'past' : (isActive ? 'active' : '')}">
                             <div class="row-header">
@@ -379,16 +409,13 @@
                 mileContainer.innerHTML = htmlBuffer;
             }
 
-            // 2. 반복 일정 렌더링
             renderRepeatingSection('ruins', config.ruins, "고대 유적", "Ruins", 'ruins-list', 'ruins-next-box', 'ruins-next-title');
             renderRepeatingSection('altar', config.altar, "어둠의 제단", "Altar", 'altar-list', 'altar-next-box', 'altar-next-title');
 
-            // 3. 타이머 시작
             setInterval(updateTimers, 1000); 
             updateTimers(); 
         }
 
-        // 타이머 업데이트 함수
         function updateTimers() {
             const now = new Date();
             const timeDisplay = document.getElementById('current-time-display');
@@ -398,35 +425,38 @@
 
             function updateCount(targetDate, elementId) {
                 const el = document.getElementById(elementId);
-                if (!el) return;
-                
-                if (!targetDate) {
-                    // 타겟이 없는 경우 (모든 일정 종료 등)
-                    // el.innerText = "Waiting..."; 
-                    return;
-                }
-
+                if (!el || !targetDate) return;
                 const t = getTimeRemaining(targetDate);
 
                 if (t.total <= 0) {
                     el.innerText = "OPEN NOW!";
                     el.style.color = "#00e676";
                 } else {
-                    // 음수 방지
-                    const d = t.days > 0 ? t.days : 0;
-                    const h = t.hours > 0 ? t.hours : 0;
-                    const m = t.minutes > 0 ? t.minutes : 0;
-                    const s = t.seconds > 0 ? t.seconds : 0;
-
-                    const formatted = `${d > 0 ? d + 'd ' : ''}${('0'+h).slice(-2)}:${('0'+m).slice(-2)}:${('0'+s).slice(-2)}`;
+                    const formatted = `${t.days > 0 ? t.days + 'd ' : ''}${('0'+t.hours).slice(-2)}:${('0'+t.minutes).slice(-2)}:${('0'+t.seconds).slice(-2)}`;
                     el.innerText = formatted;
                     el.style.color = "white";
                 }
             }
-
             updateCount(targets.milestone, 'milestone-next-timer');
             updateCount(targets.ruins, 'ruins-next-timer');
             updateCount(targets.altar, 'altar-next-timer');
+        }
+
+        // 👇 [신규 기능] 클립보드 복사 함수
+        function copyToClipboard(type) {
+            const titleEl = document.getElementById(type + '-next-title');
+            const timerEl = document.getElementById(type + '-next-timer');
+            
+            if (!titleEl || !timerEl) return;
+
+            // 복사할 텍스트 포맷: "[이벤트명] 남은 시간: 00:00:00"
+            const textToCopy = `[1120 KVK] ${titleEl.innerText}: ${timerEl.innerText} 남음`;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert("복사되었습니다!\n\n" + textToCopy);
+            }).catch(err => {
+                alert("복사 실패 (보안 설정 확인 필요)");
+            });
         }
     </script>
 </body>
