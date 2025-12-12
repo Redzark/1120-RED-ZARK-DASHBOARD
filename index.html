@@ -38,16 +38,17 @@
             font-size: 1.5em;
         }
 
+        /* 시계 스타일 */
         .server-time {
-            font-size: 0.95em; /* 글자 크기 살짝 키움 */
+            font-size: 0.95em;
             color: var(--text-secondary);
             margin-bottom: 20px;
             font-family: monospace;
-            background: rgba(0,0,0,0.3); /* 배경 깔아서 가독성 확보 */
+            background: rgba(0,0,0,0.3);
             display: inline-block;
-            padding: 5px 15px;
-            border-radius: 15px;
-            border: 1px solid #333;
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid #444;
         }
 
         .container {
@@ -192,7 +193,7 @@
 
     <h1>KVK 1120 COMMAND CENTER</h1>
     
-    <div class="server-time" id="current-time-display">Loading system...</div>
+    <div class="server-time" id="current-time-display">Loading...</div>
 
     <div class="container">
 
@@ -266,16 +267,9 @@
     </div>
 
     <script>
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            alert("⚠️ 오류 발생: " + msg + "\n줄 번호: " + lineNo);
-            return false;
-        };
-
-        window.onload = function() {
-            try { initializeApp(); } 
-            catch (e) { console.error(e); }
-        };
-
+        // =========================================================
+        // 👇 [설정 구역]
+        // =========================================================
         const config = {
             milestones: [
                 { titleKr: "잃어버린 왕국 오픈", titleEn: "Lost Kingdom Opens", date: "2025-12-09T09:00:00" },
@@ -288,86 +282,23 @@
             altar: { start: "2025-12-20T09:00:00", interval: 86, count: 10 }
         };
 
+        // 전역 변수
         let targets = { milestone: null, ruins: null, altar: null };
 
+        // DOM이 준비되면 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                initializeApp();
+            } catch (e) {
+                console.error("Critical Error:", e);
+                alert("시스템 초기화 중 오류가 발생했습니다.");
+            }
+        });
+
+        // 1. 시간 포맷팅 함수
         function formatTime(dateObj) {
-            const kst = dateObj.toLocaleString('en-US', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
-            const utc = dateObj.toLocaleString('en-US', { timeZone: 'UTC', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
-            return { kst, utc };
-        }
-
-        function getTimeRemaining(endtime) {
-            const total = Date.parse(endtime) - Date.parse(new Date());
-            const seconds = Math.floor((total / 1000) % 60);
-            const minutes = Math.floor((total / 1000 / 60) % 60);
-            const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
-            const days = Math.floor(total / (1000 * 60 * 60 * 24));
-            return { total, days, hours, minutes, seconds };
-        }
-
-        function getDdayBadge(dateObj) {
-            const now = new Date();
-            const diffTime = dateObj - now;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            if (diffTime < 0) return `<span class="badge">END</span>`;
-            if (diffDays <= 1) return `<span class="badge d-day">D-Day</span>`;
-            return `<span class="badge">D-${diffDays}</span>`;
-        }
-
-        function generateRepeatingEvents(cfg, nameKr, nameEn) {
-            const list = [];
-            const startDate = new Date(cfg.start);
-            const now = new Date();
-            for (let i = 0; i < cfg.count; i++) {
-                const evtDate = new Date(startDate.getTime() + (i * cfg.interval * 60 * 60 * 1000));
-                if (evtDate > now - (1000 * 60 * 60)) {
-                    list.push({
-                        index: i + 1,
-                        titleKr: `${nameKr} (${i + 1}회차)`,
-                        titleEn: `${nameEn} #${i + 1}`,
-                        date: evtDate
-                    });
-                }
-            }
-            return list;
-        }
-
-        function renderRepeatingSection(type, cfg, nameKr, nameEn, listId, boxId, titleId) {
-            const events = generateRepeatingEvents(cfg, nameKr, nameEn);
-            const container = document.getElementById(listId);
-            const nextBox = document.getElementById(boxId);
+            // 날짜 객체가 유효한지 확인
+            if (isNaN(dateObj.getTime())) return { kst: "Error", utc: "Error" };
             
-            if (!container) return;
-            if (events.length === 0) {
-                container.innerHTML = '<div style="padding:10px; color:#666;">종료된 일정입니다 (All Completed)</div>';
-                return;
-            }
-
-            targets[type] = events[0].date;
-            if(nextBox) nextBox.style.display = 'block';
-            const titleEl = document.getElementById(titleId);
-            if(titleEl) titleEl.innerText = `${events[0].titleKr} / ${events[0].titleEn}`;
-
-            let htmlBuffer = "";
-            events.forEach((evt, idx) => {
-                const times = formatTime(evt.date);
-                const isNext = (idx === 0);
-                htmlBuffer += `
-                    <div class="list-item ${isNext ? 'active' : ''}">
-                        <div class="row-header">
-                            <span>${evt.titleKr}</span>
-                            ${isNext ? '<span class="badge next">NEXT</span>' : ''}
-                        </div>
-                        <div class="row-sub">${evt.titleEn}</div>
-                        <div class="row-time">
-                            <span>🇰🇷 ${times.kst}</span>
-                            <span>🌍 ${times.utc}</span>
-                        </div>
-                    </div>`;
-            });
-            container.innerHTML = htmlBuffer;
-        }
-
-        function initializeApp() {
-            const now = new Date();
-            const mileContainer = document.getElementById('milestone-list
+            const kst = dateObj.toLocaleString('en-US', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+            const utc = dateObj.toLocaleString('en-US', {
