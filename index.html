@@ -7,146 +7,314 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* ============================
-           🎨 디자인 시스템 (Clean Dark)
+           기본 스타일 (화면 강제 출력용)
            ============================ */
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --header-bg: #252525;
-            --text-primary: #e0e0e0;
-            --text-secondary: #9e9e9e;
-            --border-color: #333;
-            
-            /* 포인트 컬러 */
-            --accent-gold: #ffb74d;
-            --accent-red: #ef5350;
-            --accent-blue: #42a5f5;
-            --accent-purple: #ab47bc;
-            --accent-green: #66bb6a;
-        }
-
         body {
+            background-color: #121212;
+            color: #e0e0e0;
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 20px;
+            margin: 0; padding: 20px;
             text-align: center;
-            line-height: 1.6;
         }
 
-        /* 헤더 스타일 */
-        h1 {
-            color: var(--accent-gold);
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+        /* 에러 메시지 박스 (평소엔 숨김) */
+        #debug-console {
+            display: none;
+            background: #d32f2f; color: white;
+            padding: 15px; margin-bottom: 20px;
+            border-radius: 8px; text-align: left;
+            font-family: monospace; font-size: 0.9em;
         }
 
+        h1 { color: #ffb74d; margin-bottom: 10px; font-size: 1.5rem; }
+
+        /* 시계 */
         .main-clock {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 25px;
+            background: rgba(255,255,255,0.05);
+            padding: 10px 20px; border-radius: 20px;
+            display: inline-block; margin-bottom: 20px;
             font-family: 'Roboto Mono', monospace;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+            border: 1px solid #333;
         }
 
-        .container {
-            max-width: 720px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        .container { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
 
-        /* 📊 대시보드 (외교/공지) */
-        .dashboard-grid {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .dash-card {
-            flex: 1;
-            min-width: 300px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            text-align: left;
-        }
-        .dash-header {
-            font-size: 1.1rem;
-            font-weight: 700;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-            margin-bottom: 10px;
-        }
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.95rem; }
-        .notice-list { padding-left: 20px; margin: 0; font-size: 0.9rem; color: #ccc; }
-        .notice-list li { margin-bottom: 5px; }
-
-        /* 📂 아코디언 스타일 (핵심) */
-        details {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden; /* 내부 내용 넘침 방지 */
-            transition: all 0.3s ease;
-        }
-
-        /* 펼쳐졌을 때 스타일 */
-        details[open] {
-            border-color: #555;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        /* 헤더 (클릭하는 부분) */
+        /* 대시보드 */
+        .dashboard-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+        .dash-card { flex: 1; min-width: 280px; background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; text-align: left; }
+        .dash-head { font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 10px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9em; }
+        
+        /* 아코디언 */
+        details { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
+        details[open] { border-color: #555; }
         summary {
-            padding: 15px 20px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1.1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--header-bg);
-            list-style: none; /* 기본 화살표 제거 */
-            user-select: none;
-            transition: background 0.2s;
+            padding: 15px; cursor: pointer; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            background: #252525; list-style: none; user-select: none;
         }
-        summary:hover { background-color: #333; }
-        
-        /* 웹킷 브라우저 화살표 제거 */
         summary::-webkit-details-marker { display: none; }
-
-        /* 커스텀 화살표 */
-        summary::after {
-            content: '▼';
-            font-size: 0.8em;
-            color: var(--text-secondary);
-            transition: transform 0.3s ease;
-        }
-        
-        /* 펼쳐지면 화살표 회전 */
+        summary::after { content: '▼'; color: #888; font-size: 0.8em; }
         details[open] summary::after { transform: rotate(180deg); }
 
-        /* 섹션별 왼쪽 컬러바 */
-        .sec-milestone summary { border-left: 5px solid var(--accent-red); }
-        .sec-ruins summary { border-left: 5px solid var(--accent-blue); }
-        .sec-altar summary { border-left: 5px solid var(--accent-purple); }
+        /* 섹션 컬러 */
+        .sec-milestone summary { border-left: 5px solid #ef5350; }
+        .sec-ruins summary { border-left: 5px solid #42a5f5; }
+        .sec-altar summary { border-left: 5px solid #ab47bc; }
 
-        /* 내부 콘텐츠 영역 */
-        .content-area {
-            padding: 15px;
-            border-top: 1px solid var(--border-color);
+        /* 내부 콘텐츠 */
+        .content-area { padding: 15px; }
+        
+        /* 타이머 박스 */
+        .timer-box { background: #151515; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; text-align: center; }
+        .timer-title { font-weight: bold; color: #fff; font-size: 1.1em; }
+        .timer-digits { font-family: 'Roboto Mono', monospace; font-size: 1.8em; font-weight: bold; margin-top: 5px; color: #fff; }
+        
+        /* 리스트 */
+        .list-item { 
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.03); padding: 10px; margin-bottom: 5px; border-radius: 6px;
+        }
+        .list-item.active { background: rgba(255, 183, 77, 0.15); border: 1px solid #ffb74d; }
+        .item-left { text-align: left; }
+        .item-right { text-align: right; font-family: 'Roboto Mono', monospace; font-size: 0.8em; color: #aaa; }
+        
+        /* 배지 & 버튼 */
+        .badge { font-size: 0.7em; padding: 2px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+        .bg-gold { background: #ffb74d; color: black; }
+        .btn-copy { background: none; border: 1px solid #666; color: #aaa; font-size: 0.7em; cursor: pointer; border-radius: 4px; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="debug-console"></div>
+
+    <h1>KVK 1120 COMMAND CENTER</h1>
+    <div class="main-clock" id="main-clock">System Loading...</div>
+
+    <div class="container">
+
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <div class="dash-head" style="color:#66bb6a">🤝 외교 (Diplomacy)</div>
+                <div class="info-row"><span style="color:#66bb6a; font-weight:bold">🔵 Allies</span> <span>#1121, #1122</span></div>
+                <div class="info-row"><span style="color:#ef5350; font-weight:bold">🔴 Enemy</span> <span>#1130, #1131</span></div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-head" style="color:#ffb74d">📢 공지 (Notice)</div>
+                <ul style="padding-left:20px; margin:0; font-size:0.9em; color:#ccc; line-height:1.6">
+                    <li>⚔️ <strong>Goal:</strong> 3천만 킬 (30M Kills)</li>
+                    <li>🚜 <strong>Farming:</strong> 자유 (Free)</li>
+                    <li>⛔ <strong>City Hit:</strong> 금지 (No Zeroing)</li>
+                </ul>
+            </div>
+        </div>
+
+        <details class="sec-milestone" open>
+            <summary>🚩 주요 일정 (Milestones)</summary>
+            <div class="content-area">
+                <div id="box-milestone" class="timer-box" style="display:none">
+                    <div class="timer-title">
+                        <span id="title-milestone">-</span>
+                        <button class="btn-copy" onclick="copyTimer('milestone')">COPY</button>
+                    </div>
+                    <div class="timer-digits" id="timer-milestone">00:00:00</div>
+                </div>
+                <div id="list-milestone">Loading List...</div>
+            </div>
+        </details>
+
+        <details class="sec-ruins">
+            <summary>🏛️ 고대 유적 (Ruins)</summary>
+            <div class="content-area">
+                <div id="box-ruins" class="timer-box" style="display:none">
+                    <div class="timer-title">
+                        <span id="title-ruins">-</span>
+                        <button class="btn-copy" onclick="copyTimer('ruins')">COPY</button>
+                    </div>
+                    <div class="timer-digits" id="timer-ruins">00:00:00</div>
+                </div>
+                <div id="list-ruins">Loading List...</div>
+            </div>
+        </details>
+
+        <details class="sec-altar">
+            <summary>🔥 어둠의 제단 (Altar)</summary>
+            <div class="content-area">
+                <div id="box-altar" class="timer-box" style="display:none">
+                    <div class="timer-title">
+                        <span id="title-altar">-</span>
+                        <button class="btn-copy" onclick="copyTimer('altar')">COPY</button>
+                    </div>
+                    <div class="timer-digits" id="timer-altar">00:00:00</div>
+                </div>
+                <div id="list-altar">Loading List...</div>
+            </div>
+        </details>
+
+    </div>
+
+    <script>
+        // 1. 에러 캐처 (화면에 에러 띄우기)
+        function logError(msg) {
+            const el = document.getElementById('debug-console');
+            el.style.display = 'block';
+            el.innerHTML += "⚠️ Error: " + msg + "<br>";
+        }
+        window.onerror = function(msg, url, line) {
+            logError(msg + " (Line: " + line + ")");
+            return false;
+        };
+
+        try {
+            // ================= 설정 =================
+            const config = {
+                milestones: [
+                    { kr: "잃어버린 왕국 오픈", en: "Lost Kingdom Opens", date: "2025-12-09T09:00:00" },
+                    { kr: "4관문 오픈", en: "Gate 4 Opens", date: "2025-12-13T12:00:00" },
+                    { kr: "5관문 오픈", en: "Gate 5 Opens", date: "2025-12-27T12:00:00" },
+                    { kr: "킹스랜드 (7관문)", en: "Kingsland (Gate 7)", date: "2026-01-08T12:00:00" },
+                    { kr: "KvK 시즌 종료", en: "Season End", date: "2026-01-28T09:00:00" }
+                ],
+                ruins: { start: "2025-12-17T09:00:00", interval: 40, count: 28 },
+                altar: { start: "2025-12-20T09:00:00", interval: 86, count: 10 }
+            };
+
+            let targets = {};
+
+            // 유틸: 0 채우기
+            const pad = (n) => n.toString().padStart(2, '0');
+
+            // 유틸: 시간 문자열 생성
+            function getTimeString(d) {
+                if(isNaN(d)) return "Invalid Date";
+                const kst = d.toLocaleString('en-US', { timeZone: 'Asia/Seoul', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false });
+                const utc = d.toLocaleString('en-US', { timeZone: 'UTC', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false });
+                return `🇰🇷 ${kst}<br>🌍 ${utc} (UTC)`;
+            }
+
+            // 유틸: 남은 시간 계산
+            function getDiff(target) {
+                const total = Date.parse(target) - Date.parse(new Date());
+                const s = Math.floor((total / 1000) % 60);
+                const m = Math.floor((total / 1000 / 60) % 60);
+                const h = Math.floor((total / (1000 * 60 * 60)) % 24);
+                const d = Math.floor(total / (1000 * 60 * 60 * 24));
+                return { total, d, h, m, s };
+            }
+
+            // 데이터 생성
+            function createEvents(cfg, kr, en) {
+                let list = [];
+                let start = new Date(cfg.start);
+                let now = new Date();
+                
+                for(let i=0; i<cfg.count; i++) {
+                    let d = new Date(start.getTime() + (i * cfg.interval * 3600000));
+                    if(d > now - 3600000) {
+                        list.push({ kr: `${kr} (${i+1}차)`, en: `${en} #${i+1}`, date: d });
+                    }
+                }
+                return list;
+            }
+
+            // 렌더링
+            function render(type, events, listId, boxId, titleId) {
+                const listEl = document.getElementById(listId);
+                const boxEl = document.getElementById(boxId);
+                const titleEl = document.getElementById(titleId);
+
+                if(!events.length) {
+                    listEl.innerHTML = "<div style='padding:10px'>All Done.</div>";
+                    return;
+                }
+
+                // 타겟 설정
+                targets[type] = events[0].date;
+                boxEl.style.display = 'block';
+                titleEl.innerText = `${events[0].kr} / ${events[0].en}`;
+
+                let html = "";
+                events.forEach((evt, idx) => {
+                    const isNext = (idx === 0);
+                    const activeClass = isNext ? 'active' : '';
+                    const timeHTML = getTimeString(evt.date);
+                    
+                    html += `
+                    <div class="list-item ${activeClass}">
+                        <div class="item-left">
+                            <div style="font-weight:bold">${evt.kr} ${isNext ? '<span class="badge bg-gold">NEXT</span>' : ''}</div>
+                            <div style="font-size:0.8em; color:#888">${evt.en}</div>
+                        </div>
+                        <div class="item-right">${timeHTML}</div>
+                    </div>`;
+                });
+                listEl.innerHTML = html;
+            }
+
+            // 초기화 실행
+            const msData = config.milestones.map(m => ({ kr: m.kr, en: m.en, date: new Date(m.date) }));
+            render('milestone', msData, 'list-milestone', 'box-milestone', 'title-milestone');
+
+            const ruinsData = createEvents(config.ruins, "고대 유적", "Ruins");
+            render('ruins', ruinsData, 'list-ruins', 'box-ruins', 'title-ruins');
+
+            const altarData = createEvents(config.altar, "어둠의 제단", "Altar");
+            render('altar', altarData, 'list-altar', 'box-altar', 'title-altar');
+
+            // 루프 함수
+            function loop() {
+                const now = new Date();
+                
+                // 메인 시계
+                const clockEl = document.getElementById('main-clock');
+                if(clockEl) {
+                    const kst = now.toLocaleString('en-US', { timeZone: 'Asia/Seoul', hour12: false });
+                    const utc = now.toLocaleString('en-US', { timeZone: 'UTC', hour12: false });
+                    clockEl.innerHTML = `🇰🇷 ${kst} (KST) &nbsp;|&nbsp; 🌍 ${utc} (UTC)`;
+                }
+
+                // 타이머
+                ['milestone', 'ruins', 'altar'].forEach(key => {
+                    const tgt = targets[key];
+                    const el = document.getElementById('timer-' + key);
+                    if(tgt && el) {
+                        const t = getDiff(tgt);
+                        if(t.total <= 0) {
+                            el.innerText = "OPEN NOW!";
+                            el.style.color = "#00e676";
+                        } else {
+                            el.innerText = `${t.d}d ${pad(t.h)}:${pad(t.m)}:${pad(t.s)}`;
+                            el.style.color = "white";
+                        }
+                    }
+                });
+            }
+
+            setInterval(loop, 1000);
+            loop(); // 즉시 실행
+
+        } catch (e) {
+            logError("초기화 중 치명적 오류: " + e.message);
         }
 
-        /* ⏱️ 타이머 박스 */
-        .timer-box {
-            background: #151515;
-            border: 1px
+        // 복사 기능 (안전하게 처리)
+        function copyTimer(type) {
+            try {
+                const title = document.getElementById('title-' + type).innerText;
+                const time = document.getElementById('timer-' + type).innerText;
+                const text = `[1120 KVK] ${title} : ${time} left`;
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => alert("Copied!\n" + text))
+                    .catch(() => prompt("Ctrl+C to copy:", text));
+                } else {
+                    prompt("Ctrl+C to copy:", text);
+                }
+            } catch(e) {
+                alert("Copy Failed");
+            }
+        }
+    </script>
+</body>
+</html>
