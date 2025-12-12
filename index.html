@@ -3,119 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoK KVK 1120 Command Center (Safe Mode)</title>
+    <title>KVK 1120 Emergency Mode</title>
     <style>
-        /* ============================
-           디자인 시스템 (Dark Theme)
-           ============================ */
-        :root {
-            --bg-color: #0f1219;
-            --card-bg: #1e2330;
-            --text-primary: #f0f0f0;
-            --text-secondary: #a0a5b9;
-            --accent-gold: #ffb347;
-            --ruins-color: #4fc3f7; 
-            --altar-color: #ba68c8;
-            --war-color: #e57373;
-            --timer-bg: #2d3342;
-            --safe-color: #81c784;
+        /* 기본 스타일 (화면이 안 보이는 문제 방지) */
+        body { 
+            background-color: #0f1219; 
+            color: #ffffff; 
+            font-family: sans-serif; 
+            text-align: center; 
+            margin: 0; padding: 20px; 
+        }
+        h1 { color: #ffb347; margin-bottom: 5px; }
+        
+        /* 로딩/에러 메시지 박스 */
+        #status-msg {
+            padding: 10px; border: 1px solid #444; margin: 10px auto;
+            max-width: 600px; background: #222; color: #aaa;
+        }
+        .error-mode { background: #ff5252 !important; color: white !important; font-weight: bold; }
+
+        /* 컨테이너 */
+        .container { max-width: 700px; margin: 20px auto; display: flex; flex-direction: column; gap: 15px; }
+
+        /* 대시보드 카드 */
+        .dash-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .card { flex: 1; min-width: 280px; background: #1e2330; padding: 15px; border-radius: 8px; border: 1px solid #444; text-align: left; }
+        .card-title { font-weight: bold; border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 10px; display: block; }
+        
+        /* 리스트 스타일 */
+        .section-box { background: #1e2330; border: 1px solid #333; border-radius: 8px; padding: 10px; text-align: left; }
+        .sec-title { color: #ffb347; font-weight: bold; padding: 10px; border-bottom: 1px solid #444; }
+        .list-item { background: rgba(0,0,0,0.3); padding: 10px; margin: 5px 0; border-radius: 4px; display: flex; justify-content: space-between; font-size: 0.9em; }
+        .list-item.active { border: 1px solid #ffb347; background: rgba(255, 179, 71, 0.1); }
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.8em; background: #333; }
+        .badge.next { background: #ffb347; color: black; }
+
+        /* 타이머 박스 */
+        .next-box { background: #2d3342; text-align: center; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .timer-text { font-size: 1.5em; font-weight: bold; font-family: monospace; display: block; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>KVK 1120 COMMAND CENTER</h1>
+    <div id="status-msg">System Loading...</div>
+
+    <div class="container">
+        
+        <div class="dash-row">
+            <div class="card">
+                <span class="card-title" style="color:#81c784">🤝 외교 (Diplomacy)</span>
+                <div>🔵 아군: #1121, #1122</div>
+                <div style="margin-top:5px; color:#e57373">🔴 적군: #1130, #1131</div>
+            </div>
+            <div class="card">
+                <span class="card-title" style="color:#ffb347">📢 공지 (Notice)</span>
+                <div>⚔️ 목표: KVK 3천만 킬 달성</div>
+                <div>🚜 채집: Free (채집킬X)</div>
+                <div>⛔ 공성: 금지 (City Hit X)</div>
+            </div>
+        </div>
+
+        <div class="section-box">
+            <div class="sec-title">🚩 주요 일정 (Milestones)</div>
+            <div class="next-box" id="box-milestone" style="display:none">
+                <div id="title-milestone" style="font-weight:bold">-</div>
+                <span class="timer-text" id="timer-milestone">00:00:00</span>
+            </div>
+            <div id="list-milestone"></div>
+        </div>
+
+        <div class="section-box">
+            <div class="sec-title" style="color:#4fc3f7">🏛️ 고대 유적 (Ruins)</div>
+            <div class="next-box" id="box-ruins" style="display:none">
+                <div id="title-ruins" style="font-weight:bold">-</div>
+                <span class="timer-text" id="timer-ruins">00:00:00</span>
+            </div>
+            <div id="list-ruins"></div>
+        </div>
+
+        <div class="section-box">
+            <div class="sec-title" style="color:#ba68c8">🔥 어둠의 제단 (Altar)</div>
+            <div class="next-box" id="box-altar" style="display:none">
+                <div id="title-altar" style="font-weight:bold">-</div>
+                <span class="timer-text" id="timer-altar">00:00:00</span>
+            </div>
+            <div id="list-altar"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // 오류 잡는 함수
+        function catchError(e) {
+            const msgBox = document.getElementById('status-msg');
+            msgBox.innerHTML = "⚠️ 시스템 오류 발생: " + e.message;
+            msgBox.className = "error-mode";
+            console.error(e);
         }
 
-        body {
-            font-family: 'Segoe UI', 'Noto Sans KR', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
+        // 메인 로직 실행
+        try {
+            // 날짜 설정
+            const config = {
+                milestones: [
+                    { t: "잃어버린 왕국 오픈", date: "2025-12-09T09:00:00" },
+                    { t: "4관문 오픈", date: "2025-12-13T12:00:00" },
+                    { t: "5관문 오픈", date: "2025-12-27T12:00:00" },
+                    { t: "킹스랜드 (7관문)", date: "2026-01-08T12:00:00" },
+                    { t: "KvK 시즌 종료", date: "2026-01-28T09:00:00" }
+                ],
+                ruins: { start: "2025-12-17T09:00:00", interval: 40, count: 28 },
+                altar: { start: "2025-12-20T09:00:00", interval: 86, count: 10 }
+            };
 
-        h1 {
-            color: var(--accent-gold);
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            font-size: 1.5em;
-        }
+            let targets = {};
 
-        /* 시계 스타일 */
-        .server-time {
-            font-size: 0.95em;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-            font-family: monospace;
-            background: rgba(0,0,0,0.3);
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
-            border: 1px solid #444;
-        }
+            // 시간 포맷 (KST/UTC)
+            function getClockHTML() {
+                const now = new Date();
+                const kst = now.toLocaleString('en-US', { timeZone: 'Asia/Seoul', hour12: false });
+                const utc = now.toLocaleString('en-US', { timeZone: 'UTC', hour12: false });
+                return `🇰🇷 ${kst} (KST) <br> 🌍 ${utc} (UTC)`;
+            }
 
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+            // 남은 시간 계산
+            function getDiff(d) {
+                const total = Date.parse(d) - Date.parse(new Date());
+                const s = Math.floor((total / 1000) % 60);
+                const m = Math.floor((total / 1000 / 60) % 60);
+                const h = Math.floor((total / (1000 * 60 * 60)) % 24);
+                const d_day = Math.floor(total / (1000 * 60 * 60 * 24));
+                return { total, d: d_day, h, m, s };
+            }
 
-        /* 에러 로그 박스 (문제 발생 시에만 보임) */
-        #error-log {
-            display: none;
-            background-color: #ff5252;
-            color: white;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            text-align: left;
-            font-size: 0.9em;
-            white-space: pre-wrap;
-        }
+            // 반복 일정 생성
+            function makeEvents(startStr, interval, count, name) {
+                const list = [];
+                const start = new Date(startStr);
+                const now = new Date();
+                
+                if(isNaN(start)) throw new Error("날짜 형식이 잘못됨: " + startStr);
 
-        /* 대시보드 그리드 */
-        .dashboard-grid {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
-        .dashboard-card {
-            flex: 1;
-            min-width: 280px;
-            background: var(--card-bg);
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: left;
-        }
-        .dash-title {
-            margin: 0 0 10px 0;
-            font-size: 1.1em;
-            border-bottom: 1px solid #555;
-            padding-bottom: 5px;
-            font-weight: bold;
-        }
-        .diplomacy-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9em; }
-        .rules-list { margin: 0; padding-left: 20px; font-size: 0.9em; color: #ddd; line-height: 1.6; }
+                for(let i=0; i<count; i++) {
+                    const d = new Date(start.getTime() + (i * interval * 3600000));
+                    // 1시간 전 일정까지 표시
+                    if (d > now - 3600000) list.push({ t: `${name} #${i+1}`, date: d });
+                }
+                return list;
+            }
 
-        /* 아코디언 스타일 */
-        details {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #333;
-            transition: all 0.3s ease;
+            // 렌더링 함수
+            function renderList(type, dataList, listId, boxId, titleId, timerId) {
+                const listEl = document.getElementById(listId);
+                const boxEl = document.getElementById(boxId);
+                const titleEl = document.getElementById(titleId);
+                
+                if(!dataList || dataList.length === 0) {
+                    listEl.innerHTML = "<div style='padding:10px'>일정 종료</div>";
+                    return;
+                }
+
+                // 다음 일정 타겟 설정
+                targets[type] = dataList[0].date;
+                boxEl.style.display = 'block';
+                titleEl.innerText = dataList[0].t;
+
+                let html = "";
+                dataList.forEach((item, idx) => {
+                    const isNext = (idx === 0);
+                    const timeStr = item.date.toLocaleString('en-US', {
+                        timeZone: 'Asia/Seoul', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false
+                    });
+                    
+                    html += `<div class="list-item ${isNext ? 'active' : ''}">
+                        <div>${item.t} ${isNext ? '<span class="badge next">NEXT</span>' : ''}</div>
+                        <div style="font-family:monospace">${timeStr}</div>
+                    </div>`;
+                });
+                listEl.innerHTML = html;
+            }
+
+            // 초기화
+            function init() {
+                // 주요 일정 데이터 가공
+                const now = new Date();
+                let mileData = [];
+                config.milestones.forEach(m => {
+                    const d = new Date(m.date);
+                    if(d > now - 86400000) mileData.push({ t: m.titleKr, date: d });
+                });
+
+                // 렌더링 실행
+                renderList('milestone', mileData, 'list-milestone', 'box-milestone', 'title-milestone', 'timer-milestone');
+                
+                const ruinsData = makeEvents(config.ruins.start, config.ruins.interval, config.ruins.count, "고대 유적");
+                renderList('ruins', ruinsData, 'list-ruins', 'box-ruins', 'title-ruins', 'timer-ruins');
+
+                const altarData = makeEvents(config.altar.start, config.altar.interval, config.altar.count, "어둠의 제단");
+                renderList('altar', altarData, 'list-altar', 'box-altar', 'title-altar', 'timer-altar');
+
+                // 상태 메시지 업데이트
+                document.getElementById('status-msg').innerHTML = getClockHTML();
+            }
+
+            // 타이머 루프
+            function loop() {
+                try {
+                    // 시계 업데이트
+                    document.getElementById('status-msg').innerHTML = getClockHTML();
+
+                    // 각 타이머 업데이트
+                    ['milestone', 'ruins', 'altar'].forEach(key => {
+                        const tgt = targets[key];
+                        const el = document.getElementById('timer-' + key);
+                        if(tgt && el) {
+                            const diff = getDiff(tgt);
+                            if(diff.total <= 0) {
+                                el.innerText = "OPEN NOW!";
+                                el.style.color = "#00e676";
+                            } else {
+                                const pad = (n) => n.toString().padStart(2, '0');
+                                el.innerText = `${diff.d}d ${pad(diff.h)}:${pad(diff.m)}:${pad(diff.s)}`;
+                                el.style.color = "white";
+                            }
+                        }
+                    });
+                } catch(e) { catchError(e); }
+            }
+
+            // 실행 시작
+            init();
+            setInterval(loop, 1000);
+
+        } catch (e) {
+            catchError(e);
         }
-
-        details[open] { border-color: #555; padding-bottom: 15px; }
-
-        summary {
-            padding: 15px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.1em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: rgba(255, 255, 255, 0.05);
-            list-style: none
+    </script>
+</body>
+</html>
